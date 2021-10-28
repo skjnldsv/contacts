@@ -81,7 +81,7 @@ jobs:
           php nextcloud/occ integrity:sign-app --privateKey=../${{ env.APP_NAME }}.key --certificate=../${{ env.APP_NAME }}.crt --path=../${{ env.APP_NAME }}/build/artifacts/${{ env.APP_NAME }}
           # Rebuilding archive
           cd ${{ env.APP_NAME }}/build/artifacts
-          tar -cvf ${{ env.APP_NAME }}.tar.gz
+          tar -cvf ${{ env.APP_NAME }}.tar.gz ${{ env.APP_NAME }}
 
       - name: Upload app tarball to release
         uses: svenstaro/upload-release-action@v2
