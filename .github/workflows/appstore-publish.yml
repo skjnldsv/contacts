@@ -38,9 +38,8 @@ jobs:
 
       - name: Echo appinfo data
         run: |
-          echo ${{ steps.appinfo.outputs.result }}
-          echo ${{ steps.appinfo.outputs.result.nextcloud }}
-          echo ${{ steps.appinfo.outputs.result.nextcloud.min-version }}
+          echo ${{ fromJSON(steps.appinfo.outputs.result) }}
+          echo ${{ fromJSON(steps.appinfo.outputs.result).nextcloud }}
           
       - name: Set up node ${{ steps.versions.outputs.nodeVersion }}
         uses: actions/setup-node@v2
