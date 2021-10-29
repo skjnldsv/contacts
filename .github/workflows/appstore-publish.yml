@@ -1,3 +1,8 @@
+# This workflow is provided via the organization template repository
+#
+# https://github.com/nextcloud/.github
+# https://docs.github.com/en/actions/learn-github-actions/sharing-workflows-with-your-organization
+
 name: Build and publish app release
 
 on:
@@ -5,7 +10,7 @@ on:
     types: [published]
 
 env:
-  APP_NAME: contacts
+  PHP_VERSION: 7.4
 
 jobs:
   build_and_publish:
@@ -16,10 +21,23 @@ jobs:
         with:
           require: admin
 
+      - name: Set app env
+        run: |
+          # Split and keep last 
+          echo "APP_NAME=${GITHUB_REPOSITORY##*/}" >> $GITHUB_ENV
+          echo "APP_VERSION=${GITHUB_REF##*/}" >> $GITHUB_ENV
+
       - name: Checkout
         uses: actions/checkout@v2
         with:
           path: ${{ env.APP_NAME }}
+
+      - name: Get appinfo data
+        id: appinfo
+        uses: skjnldsv/xpath-action@master
+        with:
+          filename: ${{ env.APP_NAME }}/appinfo/info.xml
+          expression: '//info//dependencies//nextcloud/@min-version'
 
       - name: Read package.json node and npm engines version
         uses: skjnldsv/read-package-engines-version-actions@v1.1
@@ -29,17 +47,6 @@ jobs:
           fallbackNode: '^12'
           fallbackNpm: '^6'
 
-      - name: Get appinfo data
-        id: appinfo
-        uses: skjnldsv/xpath-action@master
-        with:
-          filename: ${{ env.APP_NAME }}/appinfo/info.xml
-          expression: '//info//dependencies//nextcloud/@min-version'
-
-      - name: Get the version
-        id: tag
-        run: echo ::set-output name=version::${GITHUB_REF/refs\/tags\//}
-  
       - name: Set up node ${{ steps.versions.outputs.nodeVersion }}
         uses: actions/setup-node@v2
         with:
@@ -48,20 +55,20 @@ jobs:
       - name: Set up npm ${{ steps.versions.outputs.npmVersion }}
         run: npm i -g npm@"${{ steps.versions.outputs.npmVersion }}"
 
-      - name: Set up php
+      - name: Set up php ${{ env.PHP_VERSION }}
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 7.4
+          php-version: ${{ env.PHP_VERSION }}
           coverage: none
 
-      - name: Build
+      - name: Build ${{ env.APP_NAME }} ${{ env.APP_VERSION }}
         run: |
           cd ${{ env.APP_NAME }}
           npm ci
           npm run build
           krankerl package || make appstore
 
-      - name: Checkout server
+      - name: Checkout server ${{ fromJSON(steps.appinfo.outputs.result).nextcloud.min-version }}
         run: |
           NCVERSION=${{ fromJSON(steps.appinfo.outputs.result).nextcloud.min-version }}
           wget --quiet https://download.nextcloud.com/server/releases/latest-$NCVERSION.zip
@@ -88,16 +95,6 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ${{ env.APP_NAME }}/build/artifacts/${{ env.APP_NAME }}.tar.gz
-          asset_name: ${{ env.APP_NAME }}-${{ steps.tag.outputs.version }}.tar.gz
+          asset_name: ${{ env.APP_NAME }}-${{ env.APP_VERSION }}.tar.gz
           tag: ${{ github.ref }}
           overwrite: true
-
-      # - name: Upload app to Nextcloud appstore
-      #   uses: R0Wi/nextcloud-appstore-push-action@v1
-      #   with:
-      #     app_name: ${{ env.APP_NAME }}
-      #     appstore_token: ${{ secrets.APPSTORE_TOKEN }}
-      #     download_url: ${{ steps.attach_to_release.outputs.browser_download_url }}
-      #     app_private_key: ${{ secrets.APP_PRIVATE_KEY }}
-      #     nightly: ${{ github.event.release.prerelease }}
-
