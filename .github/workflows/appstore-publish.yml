@@ -76,7 +76,9 @@ jobs:
           npm run build
 
       - name: Package ${{ env.APP_NAME }} ${{ env.APP_VERSION }}
-        run: krankerl package || make appstore
+        run: |
+          cd ${{ env.APP_NAME }}
+          krankerl package || make appstore
 
       - name: Checkout server ${{ fromJSON(steps.appinfo.outputs.result).nextcloud.min-version }}
         run: |
