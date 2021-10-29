@@ -68,12 +68,15 @@ jobs:
           php-version: ${{ env.PHP_VERSION }}
           coverage: none
 
-      - name: Build ${{ env.APP_NAME }} ${{ env.APP_VERSION }}
+      - name: Build ${{ env.APP_NAME }}
+        if: ${{ steps.versions.outputs.nodeVersion }}
         run: |
           cd ${{ env.APP_NAME }}
           npm ci
           npm run build
-          krankerl package || make appstore
+
+      - name: Package ${{ env.APP_NAME }} ${{ env.APP_VERSION }}
+        run: krankerl package || make appstore
 
       - name: Checkout server ${{ fromJSON(steps.appinfo.outputs.result).nextcloud.min-version }}
         run: |
