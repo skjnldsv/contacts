@@ -5,7 +5,7 @@ on:
     types: [published]
 
 env:
-  APP_NAME: ${{ github.repository_owner }}
+  APP_NAME: contacts
 
 jobs:
   build_and_publish:
@@ -31,7 +31,7 @@ jobs:
 
       - name: Get appinfo data
         id: appinfo
-        uses: QwerMike/xpath-action@v1
+        uses: skjnldsv/xpath-action@master
         with:
           filename: ${{ env.APP_NAME }}/appinfo/info.xml
           expression: '//info//dependencies//nextcloud/data(@min-version)'
