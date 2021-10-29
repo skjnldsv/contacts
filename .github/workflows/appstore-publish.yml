@@ -5,7 +5,7 @@ on:
     types: [published]
 
 env:
-  APP_NAME: contacts
+  APP_NAME: ${{ github.repository_owner }}
 
 jobs:
   build_and_publish:
@@ -34,13 +34,7 @@ jobs:
         uses: QwerMike/xpath-action@v1
         with:
           filename: ${{ env.APP_NAME }}/appinfo/info.xml
-          expression: '//info//dependencies//nextcloud/@min-version'
-
-      - name: Get Nextcloud min-version
-        id: nextcloud
-        run: |
-          data="${{ steps.appinfo.outputs.result}}"
-          echo "::set-output name=minVersion::${data##*=}"
+          expression: '//info//dependencies//nextcloud/string(@min-version)'
 
       - name: Set up node ${{ steps.versions.outputs.nodeVersion }}
         uses: actions/setup-node@v2
@@ -61,12 +55,12 @@ jobs:
           cd ${{ env.APP_NAME }}
           npm ci
           npm run build
-          make appstore
+          krankerl package || make appstore
 
       - name: Checkout server
         run: |
-          wget --quiet https://download.nextcloud.com/server/releases/latest-${{ steps.nextcloud.outputs.minVersion }}.zip
-          unzip latest-${{ steps.nextcloud.outputs.minVersion }}.zip
+          wget --quiet https://download.nextcloud.com/server/releases/latest-${{ steps.appinfo.outputs.result }}.zip
+          unzip latest-${{ steps.appinfo.outputs.result }}.zip
 
       - name: Sign app
         run: |
@@ -83,13 +77,13 @@ jobs:
           cd ${{ env.APP_NAME }}/build/artifacts
           tar -zcvf ${{ env.APP_NAME }}.tar.gz ${{ env.APP_NAME }}
 
-      - name: Upload app tarball to release
+      - name: Attach tarball to github release
         uses: svenstaro/upload-release-action@v2
         id: attach_to_release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ${{ env.APP_NAME }}/build/artifacts/${{ env.APP_NAME }}.tar.gz
-          asset_name: ${{ env.APP_NAME }}.tar.gz
+          asset_name: ${{ env.APP_NAME }}-${{ github.ref }}.tar.gz
           tag: ${{ github.ref }}
           overwrite: true
 
