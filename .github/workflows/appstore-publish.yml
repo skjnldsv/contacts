@@ -104,7 +104,6 @@ jobs:
           overwrite: true
 
       - name: Upload app to Nextcloud appstore
-        if: ${{ secrets.APPSTORE_TOKEN }}
         uses: R0Wi/nextcloud-appstore-push-action@v1
         with:
           app_name: ${{ env.APP_NAME }}
