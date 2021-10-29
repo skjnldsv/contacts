@@ -34,7 +34,7 @@ jobs:
         uses: QwerMike/xpath-action@v1
         with:
           filename: ${{ env.APP_NAME }}/appinfo/info.xml
-          expression: '//info//dependencies//nextcloud/string(@min-version)'
+          expression: '//info//dependencies//nextcloud/@min-version/string()'
 
       - name: Set up node ${{ steps.versions.outputs.nodeVersion }}
         uses: actions/setup-node@v2
