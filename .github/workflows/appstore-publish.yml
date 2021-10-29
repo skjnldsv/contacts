@@ -34,8 +34,12 @@ jobs:
         uses: skjnldsv/xpath-action@master
         with:
           filename: ${{ env.APP_NAME }}/appinfo/info.xml
-          expression: '//info//dependencies//nextcloud/data(@min-version)'
+          expression: '//info//dependencies//nextcloud/@min-version'
 
+      - name: Echo appinfo data
+        run: |
+          echo ${{ steps.appinfo.outputs.result }}
+          
       - name: Set up node ${{ steps.versions.outputs.nodeVersion }}
         uses: actions/setup-node@v2
         with:
@@ -59,8 +63,8 @@ jobs:
 
       - name: Checkout server
         run: |
-          wget --quiet https://download.nextcloud.com/server/releases/latest-${{ steps.appinfo.outputs.result }}.zip
-          unzip latest-${{ steps.appinfo.outputs.result }}.zip
+          wget --quiet https://download.nextcloud.com/server/releases/latest-${{ steps.appinfo.outputs.result.min-version }}.zip
+          unzip latest-${{ steps.appinfo.outputs.result.min-version }}.zip
 
       - name: Sign app
         run: |
