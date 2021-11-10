@@ -16,9 +16,6 @@ jobs:
   build_and_publish:
     runs-on: ubuntu-latest
 
-    # Only allowed to be run on nextcloud-releases repositories
-    if: ${{ github.repository_owner == 'skjnldsv' }}
-
     steps:
       - name: Check actor permission
         uses: skjnldsv/check-actor-permission@v2
@@ -30,21 +27,6 @@ jobs:
           # Split and keep last 
           echo "APP_NAME=${GITHUB_REPOSITORY##*/}" >> $GITHUB_ENV
           echo "APP_VERSION=${GITHUB_REF##*/}" >> $GITHUB_ENV
-
-      - name: Checkout server ${{ fromJSON(steps.appinfo.outputs.result).nextcloud.min-version }}
-        continue-on-error: true
-        id: server-checkout
-        run: |
-          NCVERSION=${{ fromJSON(steps.appinfo.outputs.result).nextcloud.min-version }}
-          wget --quiet https://download.nextcloud.com/server/releases/latest-$NCVERSION.zip
-          unzip latest-$NCVERSION.zip
-
-      - name: Checkout server master fallback
-        uses: actions/checkout@v2
-        if: ${{ steps.server-checkout.outcome != 'success' }}
-        with:
-          repository: nextcloud/server
-          path: nextcloud
 
       - name: Checkout
         uses: actions/checkout@v2
@@ -106,6 +88,21 @@ jobs:
         run: |
           cd ${{ env.APP_NAME }}
           krankerl package || make appstore
+
+      - name: Checkout server ${{ fromJSON(steps.appinfo.outputs.result).nextcloud.min-version }}
+        continue-on-error: true
+        id: server-checkout
+        run: |
+          NCVERSION=${{ fromJSON(steps.appinfo.outputs.result).nextcloud.min-version }}
+          wget --quiet https://download.nextcloud.com/server/releases/latest-$NCVERSION.zip
+          unzip latest-$NCVERSION.zip
+
+      - name: Checkout server master fallback
+        uses: actions/checkout@v2
+        if: ${{ steps.server-checkout.outcome != 'success' }}
+        with:
+          repository: nextcloud/server
+          path: nextcloud
 
       - name: Sign app
         run: |
