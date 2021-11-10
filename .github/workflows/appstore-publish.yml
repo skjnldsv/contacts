@@ -31,6 +31,21 @@ jobs:
           echo "APP_NAME=${GITHUB_REPOSITORY##*/}" >> $GITHUB_ENV
           echo "APP_VERSION=${GITHUB_REF##*/}" >> $GITHUB_ENV
 
+      - name: Checkout server ${{ fromJSON(steps.appinfo.outputs.result).nextcloud.min-version }}
+        continue-on-error: true
+        id: server-checkout
+        run: |
+          NCVERSION=${{ fromJSON(steps.appinfo.outputs.result).nextcloud.min-version }}
+          wget --quiet https://download.nextcloud.com/server/releases/latest-$NCVERSION.zip
+          unzip latest-$NCVERSION.zip
+
+      - name: Checkout server master fallback
+        uses: actions/checkout@v2
+        if: ${{ steps.server-checkout.outcome != 'success' }}
+        with:
+          repository: nextcloud/server
+          path: nextcloud
+
       - name: Checkout
         uses: actions/checkout@v2
         with:
@@ -92,20 +107,6 @@ jobs:
           cd ${{ env.APP_NAME }}
           krankerl package || make appstore
 
-      - name: Checkout server ${{ fromJSON(steps.appinfo.outputs.result).nextcloud.min-version }}
-        continue-on-error: true
-        id: server-checkout
-        run: |
-          NCVERSION=${{ fromJSON(steps.appinfo.outputs.result).nextcloud.min-version }}
-          wget --quiet https://download.nextcloud.com/server/releases/latest-$NCVERSION.zip
-          unzip latest-$NCVERSION.zip
-
-      - name: Checkout server master fallback
-        uses: actions/checkout@v2
-        if: ${{ steps.server-checkout.outcome != 'success' }}
-        with:
-          repository: nextcloud/server
-
       - name: Sign app
         run: |
           # Extracting release
@@ -130,3 +131,11 @@ jobs:
           asset_name: ${{ env.APP_NAME }}-${{ env.APP_VERSION }}.tar.gz
           tag: ${{ github.ref }}
           overwrite: true
+
+      - name: Upload app to Nextcloud appstore
+        uses: R0Wi/nextcloud-appstore-push-action@v1
+        with:
+          app_name: ${{ env.APP_NAME }}
+          appstore_token: ${{ secrets.APPSTORE_TOKEN }}
+          download_url: ${{ steps.attach_to_release.outputs.browser_download_url }}
+          app_private_key: ${{ secrets.APP_PRIVATE_KEY }}
