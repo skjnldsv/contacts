@@ -68,9 +68,14 @@ jobs:
           php-version: ${{ env.PHP_VERSION }}
           coverage: none
 
+      - name: Check file composer.json
+        id: check_composer
+        uses: andstor/file-existence-action@v1
+        with:
+          files: "${{ env.APP_NAME }}/composer.json"
+
       - name: Install composer dependencies
-        # Continue if no composer.json
-        continue-on-error: true
+        if: steps.check_composer.outputs.files_exists == 'true'
         run: |
           cd ${{ env.APP_NAME }}
           composer install --no-dev
