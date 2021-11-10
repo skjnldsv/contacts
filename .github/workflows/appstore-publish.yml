@@ -108,6 +108,7 @@ jobs:
         with:
           repository: nextcloud/server
           path: nextcloud
+          fetch-depth: 2
 
       - name: Sign app
         run: |
