@@ -69,7 +69,7 @@ jobs:
           coverage: none
 
       - name: Install composer dependencies
-        if: hashFiles('${{ env.APP_NAME }}/composer.json') != ''
+        continue-on-error: true
         run: |
           cd ${{ env.APP_NAME }}
           composer install --no-dev
