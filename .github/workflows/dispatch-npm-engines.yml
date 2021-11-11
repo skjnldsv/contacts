@@ -36,7 +36,7 @@ jobs:
             echo "$RESULTS" >> repos.json
           done
           # Pipe all results arrays and filter duplicate 
-          REPOS=$(cat repos.json | jq '.[]' | jq -s 'map(.repository.name) | unique')
+          REPOS=$(cat repos.json | jq '.[]' | jq -sc 'map(.repository.name) | unique')
           echo "::set-output name=matrix::$REPOS"
 
   dispatch:
