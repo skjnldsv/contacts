@@ -62,7 +62,7 @@ jobs:
         run: jq --tab '.engines.node = "${{ NODE_VERSION }}"' package.json > package-new.json && mv package-new.json package.json
 
       - name: Set npm version to ${{ NPM_VERSION }}
-        run: jq --tab '.engines.node = "${{ NPM_VERSION }}"' package.json > package-new.json && mv package-new.json package.json
+        run: jq --tab '.engines.npm = "${{ NPM_VERSION }}"' package.json > package-new.json && mv package-new.json package.json
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
